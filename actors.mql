@@ -1,14 +1,26 @@
 [{
-  "a:starring": [{
-    "actor": "Joe Pesci"
+  "!pd:/film/film_series/films_in_series": [{
+    "!index": null,
+    "id":     "/en/james_bond_film_series",
+    "name":   null,
+    "type":   "/film/film_series"
   }],
-  "b:starring": [{
-    "actor": "Robert de Niro"
-  }],
-  "name": null,
-  "id":   null,
+  "id":            null,
+  "initial_release_date": null,
+  "name":          null,
+  "sort":          "!pd:/film/film_series/films_in_series.!index",
   "starring": [{
-    "actor": null
+    "actor": {
+      "id":       null,
+      "name":     null,
+      "optional": true
+    },
+    "id":       null,
+    "index":    null,
+    "limit":    500,
+    "optional": true,
+    "sort":     "index",
+    "type":     "/film/performance"
   }],
-  "type": "/film/film"
+  "type":          "/film/film"
 }]​
