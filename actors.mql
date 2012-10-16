@@ -1,0 +1,14 @@
+[{
+  "a:starring": [{
+    "actor": "Joe Pesci"
+  }],
+  "b:starring": [{
+    "actor": "Robert de Niro"
+  }],
+  "name": null,
+  "id":   null,
+  "starring": [{
+    "actor": null
+  }],
+  "type": "/film/film"
+}]​
