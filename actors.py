@@ -23,6 +23,8 @@ for r in res:
 
     actors = []
     for s in r['starring']:
+        if s['actor'] is None: continue
+
         aid = s['actor']['id']
         alabel = s['actor']['name']
         actors.append({

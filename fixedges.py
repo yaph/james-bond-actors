@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-# Script doesn't work  as intended since the size values of nodes were changed
+# Script doesn't work as intended since the size values of nodes were changed
 # during processing with Gephi
 import sys, itertools
 import networkx as nx

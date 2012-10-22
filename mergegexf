@@ -1,0 +1,20 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# merge size, position and color from rendered with raw data
+import networkx as nx
+import argparse, os
+
+parser = argparse.ArgumentParser(description='mergegexf - Merge GEXF files')
+parser.add_argument('raw')
+parser.add_argument('rendered')
+args = parser.parse_args()
+
+Graw = nx.read_gexf(args.raw, node_type=None)
+Grendered = nx.read_gexf(args.rendered, node_type=None)
+
+for n in Graw.nodes(True):
+    nid = n[0]
+    if nid in Grendered.nodes():
+        Graw.node[nid]['viz'] = Grendered.node[nid]['viz']
+
+nx.write_gexf(Graw, 'merged.gexf')
