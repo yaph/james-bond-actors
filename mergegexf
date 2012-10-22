@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 # merge size, position and color from rendered with raw data
 import networkx as nx
-import argparse, os
+import argparse
 
 parser = argparse.ArgumentParser(description='mergegexf - Merge GEXF files')
 parser.add_argument('raw')
