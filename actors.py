@@ -5,16 +5,15 @@ import networkx as nx
 
 requests_cache.configure('freebase')
 
-#with open('actors.mql') as f:
-#    query = f.read()
-#r = requests.get('https://www.googleapis.com/freebase/v1/mqlread', params={'query': query})
-
 films = []
 actormap = {}
 edgemap = {}
 gexf = 'jamesbond.gexf'
 
-r = requests.get('http://www.freebase.com/api/service/mqlread?query=%7B%20%22query%22%3A%20%5B%7B%20%22!pd%3A%2Ffilm%2Ffilm_series%2Ffilms_in_series%22%3A%20%5B%7B%20%22!index%22%3A%20null%2C%20%22id%22%3A%20%22%2Fen%2Fjames_bond_film_series%22%2C%20%22name%22%3A%20null%2C%20%22type%22%3A%20%22%2Ffilm%2Ffilm_series%22%20%7D%5D%2C%20%22id%22%3A%20null%2C%20%22initial_release_date%22%3A%20null%2C%20%22name%22%3A%20null%2C%20%22sort%22%3A%20%22!pd%3A%2Ffilm%2Ffilm_series%2Ffilms_in_series.!index%22%2C%20%22starring%22%3A%20%5B%7B%20%22actor%22%3A%20%7B%20%22id%22%3A%20null%2C%20%22name%22%3A%20null%2C%20%22optional%22%3A%20true%20%7D%2C%20%22id%22%3A%20null%2C%20%22index%22%3A%20null%2C%20%22limit%22%3A%20500%2C%20%22optional%22%3A%20true%2C%20%22sort%22%3A%20%22index%22%2C%20%22type%22%3A%20%22%2Ffilm%2Fperformance%22%20%7D%5D%2C%20%22type%22%3A%20%22%2Ffilm%2Ffilm%22%20%7D%5D%20%7D')
+with open('actors.mql') as f:
+    query = f.read()
+r = requests.get('https://www.googleapis.com/freebase/v1/mqlread', params={'query': query})
+#r = requests.get('https://www.googleapis.com/freebase/v1/mqlread/?lang=%2Flang%2Fen&query=%5B%7B+%22!pd%3A%2Ffilm%2Ffilm_series%2Ffilms_in_series%22%3A+%5B%7B+%22!index%22%3A+null%2C+%22id%22%3A+%22%2Fen%2Fjames_bond_film_series%22%2C+%22name%22%3A+null%2C+%22type%22%3A+%22%2Ffilm%2Ffilm_series%22+%7D%5D%2C+%22id%22%3A+null%2C+%22initial_release_date%22%3A+null%2C+%22name%22%3A+null%2C+%22sort%22%3A+%22!pd%3A%2Ffilm%2Ffilm_series%2Ffilms_in_series.!index%22%2C+%22starring%22%3A+%5B%7B+%22actor%22%3A+%7B+%22id%22%3A+null%2C+%22name%22%3A+null%2C+%22optional%22%3A+true+%7D%2C+%22id%22%3A+null%2C+%22index%22%3A+null%2C+%22limit%22%3A+500%2C+%22optional%22%3A+true%2C+%22sort%22%3A+%22index%22%2C+%22type%22%3A+%22%2Ffilm%2Fperformance%22+%7D%5D%2C+%22type%22%3A+%22%2Ffilm%2Ffilm%22+%7D%5D')
 res = json.loads(r.text)['result']
 
 for r in res:
