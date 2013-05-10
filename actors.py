@@ -8,17 +8,22 @@ requests_cache.configure('freebase')
 films = []
 actormap = {}
 edgemap = {}
-gexf = 'jamesbond.gexf'
+# exclude films generally not counted as part of the series
+blacklist = ('/en/casino_royale_1967', '/en/casino_royale_1954', '/en/never_say_never_again')
 
+query = {}
 with open('actors.mql') as f:
-    query = f.read()
-r = requests.get('https://www.googleapis.com/freebase/v1/mqlread', params={'query': query})
-#r = requests.get('https://www.googleapis.com/freebase/v1/mqlread/?lang=%2Flang%2Fen&query=%5B%7B+%22!pd%3A%2Ffilm%2Ffilm_series%2Ffilms_in_series%22%3A+%5B%7B+%22!index%22%3A+null%2C+%22id%22%3A+%22%2Fen%2Fjames_bond_film_series%22%2C+%22name%22%3A+null%2C+%22type%22%3A+%22%2Ffilm%2Ffilm_series%22+%7D%5D%2C+%22id%22%3A+null%2C+%22initial_release_date%22%3A+null%2C+%22name%22%3A+null%2C+%22sort%22%3A+%22!pd%3A%2Ffilm%2Ffilm_series%2Ffilms_in_series.!index%22%2C+%22starring%22%3A+%5B%7B+%22actor%22%3A+%7B+%22id%22%3A+null%2C+%22name%22%3A+null%2C+%22optional%22%3A+true+%7D%2C+%22id%22%3A+null%2C+%22index%22%3A+null%2C+%22limit%22%3A+500%2C+%22optional%22%3A+true%2C+%22sort%22%3A+%22index%22%2C+%22type%22%3A+%22%2Ffilm%2Fperformance%22+%7D%5D%2C+%22type%22%3A+%22%2Ffilm%2Ffilm%22+%7D%5D')
-res = json.loads(r.text)['result']
+    query = json.load(f)
 
-for r in res:
-    # exclude 2 Casino Royal films generally not counted as part of the series
-    if r['id'] in ('/en/casino_royale_1967', '/en/casino_royale_1954', '/en/never_say_never_again'): continue
+query[0]['!pd:/film/film_series/films_in_series'][0]['id'] = '/en/james_bond_film_series'
+r = requests.get('https://www.googleapis.com/freebase/v1/mqlread', params={'query': json.dumps(query)})
+response = json.loads(r.text)
+results = response['result']
+
+seriesname = results[0]['!pd:/film/film_series/films_in_series'][0]['name']
+
+for r in results:
+    if r['id'] in blacklist: continue
 
     actors = []
     for s in r['starring']:
@@ -57,5 +62,6 @@ for a in actormap:
 for e in edgemap:
     G.add_edge(e[0], e[1], {'weight': edgemap[e]})
 
-nx.write_gexf(G, gexf, version='1.2draft')
+outputfile = seriesname.replace(' ','')+'.gexf'
+nx.write_gexf(G, outputfile, version='1.2draft')
 
