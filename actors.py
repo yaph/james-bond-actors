@@ -82,6 +82,8 @@ def dump_actors_to_gexf(id):
         attr = {'label': actormap[a]['label'],
                     'films': '|'.join(actormap[a]['films'])
                     }
+        attr.update(dict((f,True) for f in actormap[a]['films']))
+
         G.add_node(a, attr)
         G.node[a]['viz'] = {'size': len(actormap[a]['films'])}
 
