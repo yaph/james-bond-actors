@@ -1,62 +1,104 @@
 # -*- coding: utf-8 -*-
-# Get actors of James Bond movies and create as gexf.
+# Get actors of all movies in a series and create as gexf.
 import requests, requests_cache, json, itertools
 import networkx as nx
 
 requests_cache.configure('freebase')
+series = ['/en/james_bond_film_series',
+          '/en/the_three_mesquiteers',
+          '/en/carry_on_films',
+          '/en/the_pink_panther',
+          '/m/0hn_rv_', # Star Trek
+          '/en/star_wars',
+          '/m/01rb9m', # Nightmare on Elm Street
+          '/wikipedia/en_title/Tomie_$0028film_series$0029',
+          '/m/0g_sz63', # Jerry Cotton
+          '/m/0lmfcgx',  # Tsuribaka Nisshi
+          '/m/02676m4', # Harry Potter
+          '/en/american_pie_film_series',
+          '/en/the_whistler_film_series',
+          '/wikipedia/en/The_Fast_and_the_Furious_$0028film_series$0029',
+          '/m/0j_l7cw', # Hellraiser
+          '/wikipedia/en_title/The_Texas_Chainsaw_Massacre_$0028franchise$0029',
+          '/en/x_men_film_series',
+          '/en/superman_film_series',
+          '/m/0gyjf4v', # Batman
 
-#with open('actors.mql') as f:
-#    query = f.read()
-#r = requests.get('https://www.googleapis.com/freebase/v1/mqlread', params={'query': query})
+          '/m/0j7ylh0' # Emmanule
+          ]
 
-films = []
-actormap = {}
-edgemap = {}
-gexf = 'jamesbond.gexf'
+# exclude films generally not counted as part of the series
+blacklist = ('/en/casino_royale_1967', '/en/casino_royale_1954', '/en/never_say_never_again')
 
-r = requests.get('http://www.freebase.com/api/service/mqlread?query=%7B%20%22query%22%3A%20%5B%7B%20%22!pd%3A%2Ffilm%2Ffilm_series%2Ffilms_in_series%22%3A%20%5B%7B%20%22!index%22%3A%20null%2C%20%22id%22%3A%20%22%2Fen%2Fjames_bond_film_series%22%2C%20%22name%22%3A%20null%2C%20%22type%22%3A%20%22%2Ffilm%2Ffilm_series%22%20%7D%5D%2C%20%22id%22%3A%20null%2C%20%22initial_release_date%22%3A%20null%2C%20%22name%22%3A%20null%2C%20%22sort%22%3A%20%22!pd%3A%2Ffilm%2Ffilm_series%2Ffilms_in_series.!index%22%2C%20%22starring%22%3A%20%5B%7B%20%22actor%22%3A%20%7B%20%22id%22%3A%20null%2C%20%22name%22%3A%20null%2C%20%22optional%22%3A%20true%20%7D%2C%20%22id%22%3A%20null%2C%20%22index%22%3A%20null%2C%20%22limit%22%3A%20500%2C%20%22optional%22%3A%20true%2C%20%22sort%22%3A%20%22index%22%2C%20%22type%22%3A%20%22%2Ffilm%2Fperformance%22%20%7D%5D%2C%20%22type%22%3A%20%22%2Ffilm%2Ffilm%22%20%7D%5D%20%7D')
-res = json.loads(r.text)['result']
+query = {}
+with open('actors.mql') as f:
+    query = json.load(f)
 
-for r in res:
-    # exclude 2 Casino Royal films generally not counted as part of the series
-    if r['id'] in ('/en/casino_royale_1967', '/en/casino_royale_1954', '/en/never_say_never_again'): continue
+def dump_actors_to_gexf(id):
+    films = []
+    actormap = {}
+    edgemap = {}
 
-    actors = []
-    for s in r['starring']:
-        if s['actor'] is None: continue
+    query[0]['!pd:/film/film_series/films_in_series'][0]['id'] = id
+    r = requests.get('https://www.googleapis.com/freebase/v1/mqlread', params={'query': json.dumps(query)})
+    response = json.loads(r.text)
+    results = response['result']
 
-        aid = s['actor']['id']
-        alabel = s['actor']['name']
-        actors.append({
-            'id': aid,
-            'label': alabel
+    seriesname = results[0]['!pd:/film/film_series/films_in_series'][0]['name']
+
+    for r in results:
+        if r['id'] in blacklist: continue
+
+        actors = []
+        for s in r['starring']:
+            if s['actor'] is None: continue
+
+            aid = s['actor']['id']
+            alabel = s['actor']['name']
+            actors.append({
+                'id': aid,
+                'label': alabel
+            })
+            if aid not in actormap:
+                actormap[aid] = {'label': alabel, 'size': 0, 'films': []}
+            actormap[aid]['films'].append(r['name'])
+
+        films.append({
+            'id': r['id'],
+            'label': r['name'],
+            'actors': actors
         })
-        if aid not in actormap:
-            actormap[aid] = {'label': alabel, 'size': 0, 'films': []}
-        actormap[aid]['size'] += 1
-        actormap[aid]['films'].append(r['name'])
 
-    films.append({
-        'id': r['id'],
-        'label': r['name'],
-        'actors': actors
-    })
+    actorids = list(actormap.keys())
 
-actorids = list(actormap.keys())
+    for f in films:
+        comb = itertools.combinations(f['actors'], 2)
+        for c in comb:
+            e = tuple(sorted([c[0]['id'], c[1]['id']]))
+            edgemap[e] = edgemap.get(e, 0) + 1
 
-for f in films:
-    comb = itertools.combinations(f['actors'], 2)
-    for c in comb:
-        e = tuple(sorted([c[0]['id'], c[1]['id']]))
-        edgemap[e] = edgemap.get(e, 0) + 1
+    G = nx.Graph()
+    for a in actormap:
+        attr = {'label': actormap[a]['label'],
+                    'films': '|'.join(actormap[a]['films'])
+                    }
+        attr.update(dict((f,True) for f in actormap[a]['films']))
 
-G = nx.Graph()
-for a in actormap:
-    G.add_node(a, {'label': actormap[a]['label'], 'films': '|'.join(actormap[a]['films'])})
-    G.node[a]['viz'] = {'size': actormap[a]['size']}
+        G.add_node(a, attr)
+        G.node[a]['viz'] = {'size': len(actormap[a]['films'])}
 
-for e in edgemap:
-    G.add_edge(e[0], e[1], {'weight': edgemap[e]})
+    for e in edgemap:
+        G.add_edge(e[0], e[1], {'weight': edgemap[e]})
 
-nx.write_gexf(G, gexf, version='1.2draft')
+    outputfile = seriesname.replace(' ','')+'.gexf'
+    nx.write_gexf(G, outputfile, version='1.2draft')
+    return outputfile
 
+def main():
+    for id in series:
+        print "Dumping ",id
+        filename = dump_actors_to_gexf(id)
+        print "  dumped", filename
+
+if __name__ == "__main__":
+    main()
