@@ -3,7 +3,7 @@
 import requests, requests_cache, json, itertools
 import networkx as nx
 
-requests_cache.configure('freebase')
+requests_cache.install_cache('freebase')
 series = ['/en/james_bond_film_series',
           '/en/the_three_mesquiteers',
           '/en/carry_on_films',
@@ -43,6 +43,9 @@ def dump_actors_to_gexf(id):
     r = requests.get('https://www.googleapis.com/freebase/v1/mqlread', params={'query': json.dumps(query)})
     response = json.loads(r.text)
     results = response['result']
+
+    if not results:
+        return
 
     seriesname = results[0]['!pd:/film/film_series/films_in_series'][0]['name']
 
